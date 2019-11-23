@@ -1,4 +1,4 @@
-module github.com/mattermost/mattermost-plugin-starter-template
+module github.com/saturninoabril/mattermost-plugin-extended-locales
 
 go 1.12
 

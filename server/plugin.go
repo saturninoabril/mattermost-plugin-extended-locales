@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/mattermost/mattermost-server/plugin"
-	"github.com/saturninoabril/mattermost-plugin-extended-locales/locale"
+	"github.com/saturninoabril/mattermost-plugin-extended-locales/server/locale"
 )
 
 // Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
@@ -40,9 +40,9 @@ func (p *Plugin) handleGetLanguages(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(ExtendedLocales)
+	fmt.Println(locale.ExtendedLocales)
 
-	b, jsonErr := json.Marshal(ExtendedLocales)
+	b, jsonErr := json.Marshal(locale.ExtendedLocales)
 	if jsonErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -68,15 +68,15 @@ func (p *Plugin) handleGetTranslation(w http.ResponseWriter, r *http.Request) {
 	switch lang {
 	case "tl":
 		if client == "rn" {
-			b, jsonErr = json.Marshal(TagalogRN)
+			b, jsonErr = json.Marshal(locale.TagalogRN)
 		} else {
-			b, jsonErr = json.Marshal(Tagalog)
+			b, jsonErr = json.Marshal(locale.Tagalog)
 		}
 	case "no":
 		if client == "rn" {
-			b, jsonErr = json.Marshal(NorwegianRN)
+			b, jsonErr = json.Marshal(locale.NorwegianRN)
 		} else {
-			b, jsonErr = json.Marshal(Norwegian)
+			b, jsonErr = json.Marshal(locale.Norwegian)
 		}
 	default:
 	}

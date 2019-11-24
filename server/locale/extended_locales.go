@@ -12,12 +12,12 @@ var ExtendedLocales = []Locale{
 		Value: "no",
 		Name:  "Norwegian",
 		Order: 101,
-		URL:   "/plugins/com.mattermost.demo-plugin/get_translation?lang=no",
+		URL:   "/plugins/com.mattermost.plugin-extended-locales/get_translation?lang=no",
 	},
 	{
 		Value: "tl",
 		Name:  "Tagalog",
 		Order: 102,
-		URL:   "/plugins/com.mattermost.demo-plugin/get_translation?lang=tl",
+		URL:   "/plugins/com.mattermost.plugin-extended-locales/get_translation?lang=tl",
 	},
 }

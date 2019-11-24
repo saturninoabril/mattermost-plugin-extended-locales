@@ -3,7 +3,7 @@
     "name": "Extended Locales Plugin",
     "description": "Mattermost plugin to extend locales on top of built-in / supported locales.",
     "version": "0.1.0",
-    "min_server_version": "5.12.0",
+    "min_server_version": "5.18.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",

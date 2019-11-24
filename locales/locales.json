@@ -1,0 +1,20 @@
+[
+    {
+        "value": "fi",
+        "name": "Finnish",
+        "order": 101,
+        "url": "/plugins/com.mattermost.plugin-extended-locales/get_translation?lang=fi"
+    },
+    {
+        "value": "id",
+        "name": "Indonesian",
+        "order": 102,
+        "url": "/plugins/com.mattermost.plugin-extended-locales/get_translation?lang=id"
+    },
+    {
+        "value": "se",
+        "name": "Swedish",
+        "order": 103,
+        "url": "/plugins/com.mattermost.plugin-extended-locales/get_translation?lang=se"
+    }
+]

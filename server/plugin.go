@@ -73,6 +73,7 @@ func (p *Plugin) getLanguages() ([]byte, error) {
 
 	}
 
+	// This ExtendedLocales is added to show maintainability issue when not using external translation service
 	return json.Marshal(locale.ExtendedLocales)
 }
 
@@ -86,54 +87,72 @@ func (p *Plugin) handleGetTranslation(w http.ResponseWriter, r *http.Request) {
 	lang := r.URL.Query().Get("lang")
 	client := r.URL.Query().Get("client")
 
-	fmt.Println(lang)
-	fmt.Println(client)
-
 	config := p.getConfiguration()
 	if config.EnableTranslationService && config.TranslationServiceURL != "" {
-		var url string
-		if client == "rn" {
-			majorMobileAppVersion, minorMobileAppVersion, _ := SplitVersion(r.URL.Query().Get("app_version"))
-			url = fmt.Sprintf("%s/%s.%s/%s.json", config.TranslationServiceURL, majorMobileAppVersion, minorMobileAppVersion, lang)
-		} else {
-			majorServerVersion, minorServerVersion, _ := SplitVersion(p.API.GetServerVersion())
-			url = fmt.Sprintf("%s/%s.%s/%s.json", config.TranslationServiceURL, majorServerVersion, minorServerVersion, lang)
-		}
-
-		b, err := readJSONFromUrl(url)
+		b, err := getTranslationFromTranslationService(config.TranslationServiceURL, lang, client, p.API.GetServerVersion(), r.URL.Query().Get("app_version"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		w.Write(b)
-	} else {
-		var b []byte
-		var jsonErr error
-
-		switch lang {
-		case "tl":
-			if client == "rn" {
-				b, jsonErr = json.Marshal(locale.TagalogRN)
-			} else {
-				b, jsonErr = json.Marshal(locale.Tagalog)
-			}
-		case "no":
-			if client == "rn" {
-				b, jsonErr = json.Marshal(locale.NorwegianRN)
-			} else {
-				b, jsonErr = json.Marshal(locale.Norwegian)
-			}
-		default:
-		}
-
-		if jsonErr != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		w.Write(b)
+		return
 	}
+
+	// This block is added to show maintainability issue when not using external translation service
+	b, err := getTranslationFromPlugin(lang, client)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Write(b)
+}
+
+func getTranslationFromTranslationService(baseUrl, lang, client, serverVersion, appVersion string) ([]byte, error) {
+	var url string
+	if client == "rn" {
+		majorMobileAppVersion, minorMobileAppVersion, _ := SplitVersion(appVersion)
+		url = fmt.Sprintf("%s/%s.%s/%s.json", baseUrl, majorMobileAppVersion, minorMobileAppVersion, lang)
+	} else {
+		majorServerVersion, minorServerVersion, _ := SplitVersion(serverVersion)
+		url = fmt.Sprintf("%s/%s.%s/%s.json", baseUrl, majorServerVersion, minorServerVersion, lang)
+	}
+
+	b, err := readJSONFromUrl(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func getTranslationFromPlugin(lang, client string) ([]byte, error) {
+	var b []byte
+	var err error
+
+	switch lang {
+	case "tl":
+		if client == "rn" {
+			b, err = json.Marshal(locale.TagalogRN)
+		} else {
+			b, err = json.Marshal(locale.Tagalog)
+		}
+	case "no":
+		if client == "rn" {
+			b, err = json.Marshal(locale.NorwegianRN)
+		} else {
+			b, err = json.Marshal(locale.Norwegian)
+		}
+	default:
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 func SplitVersion(version string) (string, string, string) {

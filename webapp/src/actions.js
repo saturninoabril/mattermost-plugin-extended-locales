@@ -4,13 +4,12 @@ import {RECEIVED_EXTENDED_LANGUAGES} from './action_types';
 import {id as pluginId} from './manifest';
 
 export const getLocales = () => async (dispatch, getState) => {
-    console.log('getLocales');
     fetch(getPluginServerRoute(getState()) + '/get_languages').then((r) => r.json()).then((r) => {
         const c = r.reduce((acc, p) => {
             acc[p.value] = p;
             return acc;
-        }, {})
-        console.log('plugin getLocales:', c);
+        }, {});
+
         dispatch({
             type: RECEIVED_EXTENDED_LANGUAGES,
             data: c,

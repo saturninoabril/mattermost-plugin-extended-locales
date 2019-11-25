@@ -1,7 +1,7 @@
 {
     "id": "com.mattermost.plugin-extended-locales",
-    "name": "Extended Locales Plugin",
-    "description": "Mattermost plugin to extend locales on top of built-in / supported locales.",
+    "name": "Extended Client Locales Plugin",
+    "description": "Mattermost plugin to extend client locales on top of built-in / supported locales.",
     "version": "0.1.0",
     "min_server_version": "5.18.0",
     "server": {
@@ -15,8 +15,24 @@
         "bundle_path": "webapp/dist/main.js"
     },
     "settings_schema": {
-        "header": "",
-        "footer": "",
-        "settings": []
+        "header": "Configure the translation service to use",
+        "footer": "Love your contribution in extending this plugin [@github/mattermost-plugin-extended-locales](https://github.com/saturninoabril/mattermost-plugin-extended-locales)",
+        "settings": [
+            {
+                "key": "EnableTranslationService",
+                "display_name": "Get translation from external Translation Service",
+                "type": "bool",
+                "help_text": "Enable or disable the external translation service to be used by this plugin.",
+                "default": false
+            },
+            {
+                "key": "TranslationServiceURL",
+                "display_name": "Translation Service URL",
+                "type": "text",
+                "help_text": "An external URL of translation service",
+                "placeholder": "Translation Service URL",
+                "default": "https://raw.githubusercontent.com/saturninoabril/mattermost-plugin-extended-locales/master/locales"
+            }
+        ]
     }
 }

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/mattermost/mattermost-server/plugin"
@@ -20,6 +22,19 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
+}
+
+func readJSONFromUrl(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.Bytes(), nil
 }
 
 // ServeHTTP demonstrates a plugin that handles HTTP requests by greeting the world.
@@ -40,14 +55,25 @@ func (p *Plugin) handleGetLanguages(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(locale.ExtendedLocales)
 
-	b, jsonErr := json.Marshal(locale.ExtendedLocales)
-	if jsonErr != nil {
+	b, err := p.getLanguages()
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	w.Write(b)
+}
+
+func (p *Plugin) getLanguages() ([]byte, error) {
+	config := p.getConfiguration()
+	if config.EnableTranslationService && config.TranslationServiceURL != "" {
+		url := fmt.Sprintf("%s/locales.json", config.TranslationServiceURL)
+		return readJSONFromUrl(url)
+
+	}
+
+	return json.Marshal(locale.ExtendedLocales)
 }
 
 func (p *Plugin) handleGetTranslation(w http.ResponseWriter, r *http.Request) {
@@ -61,29 +87,57 @@ func (p *Plugin) handleGetTranslation(w http.ResponseWriter, r *http.Request) {
 	client := r.URL.Query().Get("client")
 
 	fmt.Println(lang)
+	fmt.Println(client)
 
-	var b []byte
-	var jsonErr error
-
-	switch lang {
-	case "tl":
+	config := p.getConfiguration()
+	if config.EnableTranslationService && config.TranslationServiceURL != "" {
+		var url string
 		if client == "rn" {
-			b, jsonErr = json.Marshal(locale.TagalogRN)
+			majorMobileAppVersion, minorMobileAppVersion, _ := SplitVersion(r.URL.Query().Get("app_version"))
+			url = fmt.Sprintf("%s/%s.%s/%s.json", config.TranslationServiceURL, majorMobileAppVersion, minorMobileAppVersion, lang)
 		} else {
-			b, jsonErr = json.Marshal(locale.Tagalog)
+			majorServerVersion, minorServerVersion, _ := SplitVersion(p.API.GetServerVersion())
+			url = fmt.Sprintf("%s/%s.%s/%s.json", config.TranslationServiceURL, majorServerVersion, minorServerVersion, lang)
 		}
-	case "no":
-		if client == "rn" {
-			b, jsonErr = json.Marshal(locale.NorwegianRN)
-		} else {
-			b, jsonErr = json.Marshal(locale.Norwegian)
-		}
-	default:
-	}
 
-	if jsonErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		b, err := readJSONFromUrl(url)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Write(b)
+	} else {
+		var b []byte
+		var jsonErr error
+
+		switch lang {
+		case "tl":
+			if client == "rn" {
+				b, jsonErr = json.Marshal(locale.TagalogRN)
+			} else {
+				b, jsonErr = json.Marshal(locale.Tagalog)
+			}
+		case "no":
+			if client == "rn" {
+				b, jsonErr = json.Marshal(locale.NorwegianRN)
+			} else {
+				b, jsonErr = json.Marshal(locale.Norwegian)
+			}
+		default:
+		}
+
+		if jsonErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Write(b)
 	}
-	w.Write(b)
+}
+
+func SplitVersion(version string) (string, string, string) {
+	parts := strings.Split(version, ".")
+
+	return parts[0], parts[1], parts[2]
 }

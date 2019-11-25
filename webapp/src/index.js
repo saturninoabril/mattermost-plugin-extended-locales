@@ -1,16 +1,15 @@
 
 const {addLocaleData} = window.ReactIntl;
 
-// import '@formatjs/intl-relativetimeformat/polyfill';
-// import '@formatjs/intl-relativetimeformat/dist/locale-data/en';
-// import '@formatjs/intl-relativetimeformat/dist/locale-data/fr'
-
 // For demo purpose only
 const noLocaleData = require('react-intl/locale-data/no');
 const tlLocaleData = require('react-intl/locale-data/tl');
 
-import {getLocales} from './actions';
+const fiLocaleData = require('react-intl/locale-data/fi');
+const idLocaleData = require('react-intl/locale-data/id');
+const seLocaleData = require('react-intl/locale-data/se');
 
+import {getLocales} from './actions';
 import {id as pluginId} from './manifest';
 
 export default class Plugin {
@@ -19,10 +18,19 @@ export default class Plugin {
         console.log('initialize ExtendedLocalesPlugin')
         store.dispatch(getLocales());
 
+        registry.registerWebSocketEventHandler(
+            'custom_' + pluginId + '_locales_change',
+            () => {store.dispatch(getLocales());},
+        );
+
         // Manually add locales
         // (future option could be to add registry on webapp to register adding locales)
         addLocaleData(noLocaleData);
         addLocaleData(tlLocaleData);
+
+        addLocaleData(fiLocaleData);
+        addLocaleData(idLocaleData);
+        addLocaleData(seLocaleData);
     }
 }
 
